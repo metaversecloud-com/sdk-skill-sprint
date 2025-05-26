@@ -22,11 +22,11 @@ export const PageContainer = ({
 
   return (
     <div className="p-4 mb-28">
-      {visitor?.isAdmin && (
+      {/* {visitor?.isAdmin && (
         <div>
           <AdminIconButton setShowSettings={() => setShowSettings(!showSettings)} showSettings={showSettings} />
         </div>
-      )}
+      )} */}
       {headerText && (
         <div className="pb-6">
           <h2>{headerText}</h2>

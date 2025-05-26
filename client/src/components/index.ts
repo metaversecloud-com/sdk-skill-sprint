@@ -5,3 +5,8 @@ export * from "./DroppedAssetDetails.js";
 export * from "./Loading.js";
 export * from "./PageContainer.js";
 export * from "./PageFooter.js";
+<<<<<<< Updated upstream
+=======
+export * from "./MultipleChoiceQuestion.js";
+export * from "./TypeExcerpt.js";
+>>>>>>> Stashed changes
