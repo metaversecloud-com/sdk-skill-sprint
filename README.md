@@ -2,6 +2,7 @@
 
 Please update the following in each of your SDK application.
 
+
 ## Introduction / Summary
 
 This boilerplate is meant to give you a simple starting point to build new features in Topia using our Javascript SDK. Please reference the [documentation](https://metaversecloud-com.github.io/mc-sdk-js/index.html) for a more detailed breakdown of what the SDK is capable of and how to use it!
