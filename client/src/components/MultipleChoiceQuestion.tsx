@@ -6,7 +6,7 @@ interface MultipleChoiceQuestionProps {
   questionNumber: number;
   questionText: string;
   options: string[];
-  /** Called after answer is checked: (isCorrect) */
+  correctIndex: number;
   onAnswer?: (isCorrect: boolean) => void;
 }
 
@@ -15,6 +15,7 @@ export const MultipleChoiceQuestion = ({
   questionNumber,
   questionText,
   options,
+  correctIndex,
   onAnswer,
 }: MultipleChoiceQuestionProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -29,17 +30,12 @@ export const MultipleChoiceQuestion = ({
     setError("");
 
     try {
-      //   const res = await backendAPI.post("/quiz/answer", {
-      //     questionId,
-      //     selectedIndex: index,
-      //   });
-      //   const correct = res.data.correct as boolean;
-      const correct = true;
+      const correct: boolean = index === correctIndex;
       setIsCorrect(correct);
       onAnswer?.(correct);
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message || "Error checking answer");
-      // Allow retry
+      // allow the user to retry the q:
       setSelectedIndex(null);
     } finally {
       setIsSubmitting(false);

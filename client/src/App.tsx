@@ -7,15 +7,17 @@ import Error from "@pages/Error";
 
 // context
 import { GlobalDispatchContext } from "./context/GlobalContext";
-import { InteractiveParams, SET_HAS_SETUP_BACKEND, SET_INTERACTIVE_PARAMS } from "./context/types";
+import { InteractiveParams, SET_GAME_STARTED, SET_HAS_SETUP_BACKEND, SET_INTERACTIVE_PARAMS } from "./context/types";
 
 // utils
-import { setupBackendAPI } from "./utils/backendAPI";
+import { backendAPI, setupBackendAPI } from "@/utils/backendAPI";
+import { getVisitor } from "./utils/getVisitor";
 
 const App = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [hasInitBackendAPI, setHasInitBackendAPI] = useState(false);
+  const [hasSetupSignal, setHasSetupSignal] = useState(false);
 
   const dispatch = useContext(GlobalDispatchContext);
 
@@ -32,16 +34,48 @@ const App = () => {
       urlSlug: searchParams.get("urlSlug") || "",
       username: searchParams.get("username") || "",
       visitorId: searchParams.get("visitorId") || "",
+      gameEngineId: searchParams.get("gameEngineId") || "",
+      iframeId: searchParams.get("iframeId") || "",
+      hasDataChannel: searchParams.get("hasDataChannel") || "",
     };
   }, [searchParams]);
 
   const setInteractiveParams = useCallback(
-    ({ profileId, sceneDropId }: InteractiveParams) => {
+    ({
+      assetId,
+      displayName,
+      identityId,
+      interactiveNonce,
+      interactivePublicKey,
+      profileId,
+      sceneDropId,
+      uniqueName,
+      urlSlug,
+      username,
+      visitorId,
+      gameEngineId,
+      iframeId,
+      hasDataChannel,
+    }: InteractiveParams) => {
+      const isInteractiveIframe = visitorId && interactiveNonce && interactivePublicKey && assetId;
       dispatch!({
         type: SET_INTERACTIVE_PARAMS,
         payload: {
+          assetId,
+          displayName,
+          identityId,
+          interactiveNonce,
+          interactivePublicKey,
+          isInteractiveIframe,
           profileId,
           sceneDropId,
+          uniqueName,
+          urlSlug,
+          username,
+          visitorId,
+          gameEngineId,
+          iframeId,
+          hasDataChannel,
         },
       });
     },
@@ -73,8 +107,27 @@ const App = () => {
     }
   }, [interactiveParams, setInteractiveParams]);
 
+  const setupWebRTC = (interactiveParams: any) => {
+    backendAPI
+      .get("/ice-servers")
+      .then((result) => {
+        getVisitor(result.data.iceServers, interactiveParams, dispatch)
+          .then(() => {
+            setHasSetupSignal(true);
+
+            // dispatch!({
+            //   type: SET_GAME_STARTED,
+            //   payload: { gameStarted: true },
+            // });
+          })
+          .catch((error) => console.error(error));
+      })
+      .catch((error) => console.error(error));
+  };
+
   useEffect(() => {
     if (!hasInitBackendAPI) setupBackend();
+    else if (interactiveParams.hasDataChannel === "true" && !hasSetupSignal) setupWebRTC(interactiveParams);
   }, [hasInitBackendAPI, interactiveParams]);
 
   return (

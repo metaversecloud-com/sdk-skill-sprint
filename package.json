@@ -1,11 +1,13 @@
 {
-  "name": "sdk-ts-boilerplate",
+  "name": "sdk-rt-boilerplate",
   "author": "metaversecloud.com | topia.io",
   "version": "1.0.0",
   "description": "",
   "type": "module",
   "scripts": {
     "build": "npm run build -ws",
+    "link-sdk": "yalc link @rtsdk/topia --no-pure",
+    "unlink-sdk": "yalc remove @rtsdk/topia",
     "start": "npm run start -w server",
     "dev": "concurrently \"npm run dev-server\" \"npm run dev-client\"",
     "dev-server": "npm run dev --prefix server",
@@ -13,19 +15,20 @@
   },
   "dependencies": {
     "@rtsdk/topia": "^0.15.9",
-    "axios": "^1.6.8",
-    "concurrently": "^8.2.2"
+    "axios": "^1.7.2",
+    "concurrently": "^8.2.2",
+    "yalc": "^1.0.0-pre.53"
   },
   "license": "BSD-3-Clause",
-  "devDependencies": {
-    "@types/axios": "^0.14.0",
-    "@types/node": "^20.12.4",
-    "nodemon": "^3.1.0",
-    "prettier": "3.2.5",
-    "typescript": "^5.4.3"
-  },
   "workspaces": [
     "client",
     "server"
-  ]
+  ],
+  "devDependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/node": "^20.14.10",
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.2",
+    "typescript": "^5.5.3"
+  }
 }

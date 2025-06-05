@@ -5,4 +5,7 @@ export const initialState = {
   hasSetupBackend: false,
   profileId: "",
   sceneDropId: "",
+  gameStarted: false,
+  questions: {},
+  gameEngineId: "",
 };

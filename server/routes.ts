@@ -4,6 +4,8 @@ import {
   handleGetGameState,
   handleRemoveDroppedAssetsByUniqueName,
   handleFireToast,
+  handleGetIceServers,
+  handleSendSignal,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -35,5 +37,9 @@ router.post("/remove-dropped-assets", handleRemoveDroppedAssetsByUniqueName);
 
 // World
 router.put("/world/fire-toast", handleFireToast);
+
+router.get("/ice-servers", handleGetIceServers);
+
+router.put("/signal", handleSendSignal);
 
 export default router;

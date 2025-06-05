@@ -27,9 +27,13 @@ const setupBackendAPI = async (interactiveParams: InteractiveParams) => {
       config.params["urlSlug"] = interactiveParams.urlSlug;
       config.params["username"] = interactiveParams.username;
       config.params["visitorId"] = interactiveParams.visitorId;
+      config.params["gameEngineId"] = interactiveParams.gameEngineId;
+      config.params["iframeId"] = interactiveParams.iframeId;
       return config;
     });
   }
 };
 
 export { backendAPI, setupBackendAPI };
+
+//@TODO: possible diff b/w this and other repo

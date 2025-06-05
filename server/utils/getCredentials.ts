@@ -25,6 +25,8 @@ export const getCredentials = (query: any): Credentials => {
       urlSlug: query.urlSlug as string,
       username: query.username as string,
       visitorId: Number(query.visitorId),
+      iframeId: query.iframeId,
+      gameEngineId: query.gameEngineId,
     };
   } catch (error) {
     return errorHandler({

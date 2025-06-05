@@ -9,17 +9,13 @@ import { TypeExcerpt } from "@/components";
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
 
 // utils
-import { backendAPI, setErrorMessage, setGameState } from "@/utils";
+import { backendAPI, setErrorMessage, setGameState, getVisitor } from "@/utils";
 import DroppedAssetDetails from "@/components/DroppedAssetDetails";
 
-type Question = {
-  questionNumber: number;
-  text: string;
-  options: string[];
-  correctIndex: number;
-};
-
-type QuestionsMap = Record<string, Question>;
+// types
+import { Question, QuestionsMap, InteractiveParams } from "@/context/types";
+import type SimplePeer from "simple-peer";
+import { profile } from "console";
 
 const testData: { questions: QuestionsMap } = {
   questions: {
@@ -49,7 +45,10 @@ const testExcerpt = [
   "left",
   "component",
   "orange",
+  "sky",
+  "topia",
   "flavor",
+  "west",
   "type-script",
   "never",
   "the",
@@ -77,41 +76,79 @@ const testExcerpt = [
 
 const Home = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams } = useContext(GlobalStateContext);
+  const {
+    hasInteractiveParams,
+    visitorId,
+    gameEngineId,
+    gameStarted,
+    questions,
+    visitor: peer,
+  } = useContext(GlobalStateContext);
 
   const [isLoading, setIsLoading] = useState(true);
 
   // State to track which question we’re on
-  const questionIds = Object.keys(testData.questions).sort();
+  const questionIds = questions ? Object.keys(questions).sort() : [];
   const totalCount = questionIds.length;
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [mcqKey, setMcqKey] = useState(0);
+
   const [startTime] = useState(() => Date.now()); // record start time on mount
 
+  let currentId: string | null = null;
+  let q: Question | null = null;
+
+  if (totalCount > 0 && currentQuestionIndex < totalCount) {
+    currentId = questionIds[currentQuestionIndex];
+    q = questions![currentId];
+  }
+
   const handleAnswer = (isCorrect: boolean) => {
-    console.log("Answer was correct?", isCorrect);
+    if (!peer) {
+      console.warn("No peer available to send message.");
+      return;
+    }
+    console.log("Answer was correct?: ", isCorrect);
+
     if (isCorrect) {
       setCorrectCount((c) => c + 1);
+
+      // Let the engine know we got the question right
+      peer.send(
+        JSON.stringify({
+          eventId: "fromIframe",
+          gameEngineId,
+          payload: {
+            type: "answer",
+            playerId: visitorId,
+            questionId: currentQuestionIndex,
+          },
+        }),
+      );
+
       setTimeout(() => {
         setCurrentQuestionIndex((i) => i + 1);
-      }, 1000);
+      }, 500);
+    } else {
+      setTimeout(() => {
+        setMcqKey((k) => k + 1);
+      }, 4000);
     }
   };
 
   useEffect(() => {
     if (hasInteractiveParams) {
-      backendAPI
-        .get("/game-state")
-        .then((response) => {
-          setGameState(dispatch, response.data);
-        })
-        .catch((error) => setErrorMessage(dispatch, error))
-        .finally(() => {
-          setIsLoading(false);
-        });
+      setIsLoading(true);
     }
   }, [hasInteractiveParams]);
+
+  useEffect(() => {
+    if (gameStarted && questions) {
+      setIsLoading(false);
+    }
+  }, [gameStarted, questions]);
 
   // Temporary what we return on completion
   if (!isLoading && currentQuestionIndex >= totalCount) {
@@ -138,27 +175,19 @@ const Home = () => {
     );
   }
 
-  // Current question data here
-  const currentId = questionIds[currentQuestionIndex];
-  const { questionNumber, text, options } = testData.questions[currentId];
-
   return (
-<<<<<<< Updated upstream
-    <PageContainer isLoading={isLoading} headerText="Server side example using interactive parameters">
-      <DroppedAssetDetails />
-=======
     <PageContainer isLoading={isLoading} headerText="Skill Sail Race">
-      {/* <DroppedAssetDetails /> */}
-      {/* <MultipleChoiceQuestion
-        key={currentId}
-        questionId={currentId}
-        questionNumber={questionNumber}
-        questionText={text}
-        options={options}
-        onAnswer={handleAnswer}
-      /> */}
-      <TypeExcerpt words={testExcerpt} />
->>>>>>> Stashed changes
+      {!isLoading && q && currentId && (
+        <MultipleChoiceQuestion
+          key={`${currentId}-${mcqKey}`}
+          questionId={currentId}
+          questionNumber={q.questionNumber}
+          questionText={q.text}
+          options={q.options}
+          correctIndex={q.correctIndex}
+          onAnswer={handleAnswer}
+        />
+      )}
     </PageContainer>
   );
 };
