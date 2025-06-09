@@ -54,7 +54,7 @@ export const getVisitor = (
         data = JSON.parse(data);
 
         if (data.payload.type === "start") {
-          const questionsReceived: QuestionsMap = data.payload.payload.questions.questions;
+          const questionsReceived: QuestionsMap = data.payload.payload.questions;
           console.log("questionsReceived" + questionsReceived);
 
           dispatch!({
