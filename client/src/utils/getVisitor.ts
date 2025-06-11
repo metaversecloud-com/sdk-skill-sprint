@@ -50,7 +50,7 @@ export const getVisitor = (
 
       // if the engine sends data
       peer.on("data", (data) => {
-        // console.log("data: " + data);
+        console.log("data: " + data);
         data = JSON.parse(data);
 
         if (data.payload.type === "start") {

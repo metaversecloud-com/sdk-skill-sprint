@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import { PageContainer } from "@/components";
 import { MultipleChoiceQuestion } from "@/components";
 import { TypeExcerpt } from "@/components";
+import { Leaderboard } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -13,7 +14,7 @@ import { backendAPI, setErrorMessage, setGameState, getVisitor } from "@/utils";
 import DroppedAssetDetails from "@/components/DroppedAssetDetails";
 
 // types
-import { Question, QuestionsMap, InteractiveParams } from "@/context/types";
+import { Question, QuestionsMap, InteractiveParams, PlayerRecord } from "@/context/types";
 import type SimplePeer from "simple-peer";
 import { profile } from "console";
 
@@ -48,30 +49,6 @@ const testExcerpt = [
   "sky",
   "topia",
   "flavor",
-  "west",
-  "type-script",
-  "never",
-  "the",
-  "left",
-  "component",
-  "orange",
-  "flavor",
-  "type-script",
-  "never",
-  "the",
-  "left",
-  "component",
-  "orange",
-  "flavor",
-  "type-script",
-  "never",
-  "the",
-  "left",
-  "component",
-  "orange",
-  "flavor",
-  "type-script",
-  "never",
 ];
 
 const Home = () => {
@@ -86,6 +63,7 @@ const Home = () => {
   } = useContext(GlobalStateContext);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [leaderboard, setLeaderboard] = useState<PlayerRecord[]>([]);
 
   // State to track which question we’re on
   const questionIds = questions ? Object.keys(questions).sort() : [];
@@ -95,7 +73,7 @@ const Home = () => {
   const [correctCount, setCorrectCount] = useState(0);
   const [mcqKey, setMcqKey] = useState(0);
 
-  const [startTime] = useState(() => Date.now()); // record start time on mount
+  const [startTime, setStartTime] = useState<number | null>(null);; 
 
   let currentId: string | null = null;
   let q: Question | null = null;
@@ -124,6 +102,7 @@ const Home = () => {
             type: "answer",
             playerId: visitorId,
             questionId: currentQuestionIndex,
+            time: Date.now() - startTime!,
           },
         }),
       );
@@ -138,6 +117,38 @@ const Home = () => {
     }
   };
 
+  // listen for completion events
+  useEffect(() => {
+    if (!peer) return;
+
+    const handleData = (raw: any) => {
+      let msg: any;
+      try {
+        msg = JSON.parse(raw);
+      } catch {
+        return;
+      }
+
+      const { type, payload: inner } = msg.payload;
+      if (type === "completion") {
+        const { username, time } = inner as {
+          username: string;
+          time: number;
+        };
+
+        setLeaderboard((prev) => {
+          if (prev.some((p) => p.username === username)) return prev;
+          return [...prev, { username, time }];
+        });
+      }
+    };
+
+    peer.on("data", handleData);
+    return () => {
+      peer.off("data", handleData);
+    };
+  }, [peer]);
+
   useEffect(() => {
     if (hasInteractiveParams) {
       setIsLoading(true);
@@ -150,9 +161,15 @@ const Home = () => {
     }
   }, [gameStarted, questions]);
 
+  useEffect(() => {
+    if (!isLoading && startTime === null) {
+      setStartTime(Date.now());
+    }
+  }, [isLoading, startTime]);
+
   // Temporary what we return on completion
   if (!isLoading && currentQuestionIndex >= totalCount) {
-    const elapsedMs = Date.now() - startTime;
+    const elapsedMs = Date.now() - startTime!;
     const seconds = Math.round(elapsedMs / 1000);
     const accuracy = Math.round((correctCount / totalCount) * 100);
 
@@ -171,6 +188,7 @@ const Home = () => {
             </p>
           </div>
         </div>
+        <Leaderboard players={leaderboard} />
       </PageContainer>
     );
   }
