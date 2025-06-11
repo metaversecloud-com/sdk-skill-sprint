@@ -12,10 +12,7 @@ const formatTime = (ms: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
-export const Leaderboard = ({
-  players,
-  maxPlayers = 8,
-}: LeaderboardProps) => {
+export const Leaderboard = ({ players, maxPlayers = 8 }: LeaderboardProps) => {
   // sort by time and take top #
   const topPlayers = [...players].sort((a, b) => a.time - b.time).slice(0, maxPlayers);
 
@@ -42,4 +39,4 @@ export const Leaderboard = ({
       </table>
     </div>
   );
-}
+};

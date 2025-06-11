@@ -41,15 +41,7 @@ const testData: { questions: QuestionsMap } = {
   },
 };
 
-const testExcerpt = [
-  "the",
-  "left",
-  "component",
-  "orange",
-  "sky",
-  "topia",
-  "flavor",
-];
+const testExcerpt = ["the", "left", "component", "orange", "sky", "topia", "flavor"];
 
 const Home = () => {
   const dispatch = useContext(GlobalDispatchContext);
@@ -64,6 +56,7 @@ const Home = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<PlayerRecord[]>([]);
+  const [completionTime, setCompletionTime] = useState<number | null>(null);
 
   // State to track which question we’re on
   const questionIds = questions ? Object.keys(questions).sort() : [];
@@ -73,7 +66,7 @@ const Home = () => {
   const [correctCount, setCorrectCount] = useState(0);
   const [mcqKey, setMcqKey] = useState(0);
 
-  const [startTime, setStartTime] = useState<number | null>(null);; 
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   let currentId: string | null = null;
   let q: Question | null = null;
@@ -112,6 +105,7 @@ const Home = () => {
       }, 500);
     } else {
       setTimeout(() => {
+        setCorrectCount(c =>  c - 1);
         setMcqKey((k) => k + 1);
       }, 4000);
     }
@@ -167,11 +161,17 @@ const Home = () => {
     }
   }, [isLoading, startTime]);
 
+  useEffect(() => {
+    if (!isLoading && currentQuestionIndex >= totalCount && startTime !== null && completionTime === null) {
+      setCompletionTime(Date.now() - startTime);
+    }
+  }, [isLoading, currentQuestionIndex, totalCount, startTime, completionTime]);
+
   // Temporary what we return on completion
   if (!isLoading && currentQuestionIndex >= totalCount) {
-    const elapsedMs = Date.now() - startTime!;
-    const seconds = Math.round(elapsedMs / 1000);
-    const accuracy = Math.round((correctCount / totalCount) * 100);
+    if (completionTime === null) return null;
+    const seconds = Math.floor(completionTime / 1000);
+    const accuracy = Math.max(0, Math.floor((correctCount / totalCount) * 100));
 
     return (
       <PageContainer isLoading={false} headerText="Skill Sail Race">
@@ -181,7 +181,7 @@ const Home = () => {
 
           <div className="mt-6">
             <p className="p2">
-              <strong>Accuracy:</strong> {correctCount} / {totalCount} ({accuracy}%)
+              <strong>Accuracy:</strong> {accuracy}%
             </p>
             <p className="p2">
               <strong>Time:</strong> {seconds} second{seconds !== 1 ? "s" : ""}
