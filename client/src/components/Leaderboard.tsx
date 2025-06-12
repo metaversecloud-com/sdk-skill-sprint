@@ -6,11 +6,13 @@ export interface LeaderboardProps {
 }
 
 const formatTime = (ms: number): string => {
-  const totalSec = Math.round(ms / 1000);
+  const totalSec = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSec / 60);
   const seconds = totalSec % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
+
+const truncate = (s: string, n = 16) => (s.length > n ? s.slice(0, n) + "…" : s);
 
 export const Leaderboard = ({ players, maxPlayers = 8 }: LeaderboardProps) => {
   // sort by time and take top #
@@ -31,7 +33,7 @@ export const Leaderboard = ({ players, maxPlayers = 8 }: LeaderboardProps) => {
           {topPlayers.map((p, idx) => (
             <tr key={p.username} className="border-t">
               <td className="p-2 p3">{idx + 1}</td>
-              <td className="p-2 p3">{p.username}</td>
+              <td className="p-2 p3">{truncate(p.username)}</td>
               <td className="p-2 p3">{formatTime(p.time)}</td>
             </tr>
           ))}
