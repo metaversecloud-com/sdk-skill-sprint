@@ -16,7 +16,15 @@ const truncate = (s: string, n = 16) => (s.length > n ? s.slice(0, n) + "…" : 
 
 export const Leaderboard = ({ players, maxPlayers = 8 }: LeaderboardProps) => {
   // sort by time and take top #
-  const topPlayers = [...players].sort((a, b) => a.time - b.time).slice(0, maxPlayers);
+  const topPlayers = [...players]
+    .sort((a, b) => {
+      if (a.time === "DNF" && b.time === "DNF") return 0;
+      if (a.time === "DNF") return 1;
+      if (b.time === "DNF") return -1;
+      // both have to be nums now:
+      return (a.time as number) - (b.time as number);
+    })
+    .slice(0, maxPlayers);
 
   return (
     <div className="rtsdk card p-6">
@@ -30,13 +38,21 @@ export const Leaderboard = ({ players, maxPlayers = 8 }: LeaderboardProps) => {
           </tr>
         </thead>
         <tbody>
-          {topPlayers.map((p, idx) => (
-            <tr key={p.username} className="border-t">
-              <td className="p-2 p3">{idx + 1}</td>
-              <td className="p-2 p3">{truncate(p.username)}</td>
-              <td className="p-2 p3">{formatTime(p.time)}</td>
-            </tr>
-          ))}
+          {topPlayers.map((p, idx) => {
+            const timeDisplay =
+              p.time === "DNF" ? (
+                "DNF"
+              ) : (
+                formatTime(p.time as number)
+              );
+            return (
+              <tr key={p.username} className="border-t">
+                <td className="p-2 p3">{idx + 1}</td>
+                <td className="p-2 p3">{truncate(p.username)}</td>
+                <td className="p-2 p3">{timeDisplay}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

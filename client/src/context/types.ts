@@ -57,5 +57,5 @@ export type QuestionsMap = Record<string, Question>;
 
 export interface PlayerRecord {
   username: string;
-  time: number; // milli
+  time: number | "DNF"; // milli
 }

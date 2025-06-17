@@ -41,7 +41,7 @@ const testData: { questions: QuestionsMap } = {
   },
 };
 
-const testExcerpt = ["the", "left", "component", "orange", "sky", "topia", "flavor"];
+const testExcerpt = ["the", "left", "component", "orange", "sky", "topia", "next"];
 
 const Home = () => {
   const dispatch = useContext(GlobalDispatchContext);
@@ -105,7 +105,7 @@ const Home = () => {
       }, 500);
     } else {
       setTimeout(() => {
-        setCorrectCount(c =>  c - 1);
+        setCorrectCount((c) => c - 1);
         setMcqKey((k) => k + 1);
       }, 4000);
     }
@@ -127,7 +127,7 @@ const Home = () => {
       if (type === "completion") {
         const { username, time } = inner as {
           username: string;
-          time: number;
+          time: number | "DNF";
         };
 
         setLeaderboard((prev) => {
@@ -187,6 +187,19 @@ const Home = () => {
               <strong>Time:</strong> {seconds} second{seconds !== 1 ? "s" : ""}
             </p>
           </div>
+        </div>
+        <Leaderboard players={leaderboard} />
+      </PageContainer>
+    );
+  }
+
+  // Show a final screen if the game is over (received a DNF) but never if we've actually finished all questions.
+  if (!isLoading && currentQuestionIndex < totalCount && leaderboard.some((p) => p.time === "DNF")) {
+    return (
+      <PageContainer isLoading={false} headerText="Skill Sail Race">
+        <div className="rtsdk p-6 text-center">
+          <h2 className="h2">Game Over</h2>
+          <p className="p1">Try again in the next round!</p>
         </div>
         <Leaderboard players={leaderboard} />
       </PageContainer>
