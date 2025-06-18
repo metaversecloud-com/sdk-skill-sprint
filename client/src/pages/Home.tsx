@@ -57,6 +57,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<PlayerRecord[]>([]);
   const [completionTime, setCompletionTime] = useState<number | null>(null);
+  const [joinedLate, setJoinedLate] = useState(false);
 
   // State to track which question we’re on
   const questionIds = questions ? Object.keys(questions).sort() : [];
@@ -134,6 +135,10 @@ const Home = () => {
           if (prev.some((p) => p.username === username)) return prev;
           return [...prev, { username, time }];
         });
+      } else if (type === "gameStartedOnConnect") {
+        // if the engine signals “game already started” on connect
+        console.log("Joined late!");
+        setJoinedLate(true);
       }
     };
 
@@ -200,6 +205,19 @@ const Home = () => {
         <div className="rtsdk p-6 text-center">
           <h2 className="h2">Game Over</h2>
           <p className="p1">Try again in the next round!</p>
+        </div>
+        <Leaderboard players={leaderboard} />
+      </PageContainer>
+    );
+  }
+
+  // If we joined late, show a special message (but only mid-game)
+  if (joinedLate) {
+    return (
+      <PageContainer isLoading={false} headerText="Skill Sail Race">
+        <div className="rtsdk p-6 text-center">
+          <h2 className="h2">You Joined Late</h2>
+          <p className="p1">Try joining in after this game is over!</p>
         </div>
         <Leaderboard players={leaderboard} />
       </PageContainer>
