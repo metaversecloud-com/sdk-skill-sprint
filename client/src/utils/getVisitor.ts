@@ -53,6 +53,7 @@ export const getVisitor = (
         console.log("data: " + data);
         data = JSON.parse(data);
 
+        // @TODO: fix questions not being the same second time around (purge old qdata?)
         if (data.payload.type === "start") {
           const questionsReceived: QuestionsMap = data.payload.payload.questions;
           console.log("questionsReceived" + questionsReceived);

@@ -105,12 +105,21 @@ const Home = () => {
         setCurrentQuestionIndex((i) => i + 1);
       }, 500);
     } else {
-      setTimeout(() => {
-        setCorrectCount((c) => c - 1);
-        setMcqKey((k) => k + 1);
+      const myQuestion = currentQuestionIndex;
+      window.setTimeout(() => {
+        // If we’re still on the same question and haven’t finished…
+        if (
+          currentQuestionIndex === myQuestion &&
+          myQuestion < totalCount
+        ) {
+          setCorrectCount(c => c - 1);
+          setMcqKey(k => k + 1);
+        }
       }, 4000);
     }
   };
+
+  // @TODO!!! check if we no longer have a peer connection and if yes show a "You Left The Experience!" page.
 
   // listen for completion events
   useEffect(() => {
@@ -217,7 +226,7 @@ const Home = () => {
       <PageContainer isLoading={false} headerText="Skill Sail Race">
         <div className="rtsdk p-6 text-center">
           <h2 className="h2">You Joined Late</h2>
-          <p className="p1">Try joining in after this game is over!</p>
+          <p className="p1">You're in the queue for the next game!</p>
         </div>
         <Leaderboard players={leaderboard} />
       </PageContainer>
