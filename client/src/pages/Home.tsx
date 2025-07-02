@@ -5,6 +5,7 @@ import { PageContainer } from "@/components";
 import { MultipleChoiceQuestion } from "@/components";
 import { TypeExcerpt } from "@/components";
 import { Leaderboard } from "@/components";
+import { Countdown } from "@/components/Countdown";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -59,6 +60,11 @@ const Home = () => {
   const [completionTime, setCompletionTime] = useState<number | null>(null);
   const [joinedLate, setJoinedLate] = useState(false);
 
+  const [numLoaded, setNumLoaded] = useState(0);
+  const [totalPlayers, setTotalPlayers] = useState(8);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [countdownKey, setCountdownKey] = useState(0);
+
   // State to track which question we’re on
   const questionIds = questions ? Object.keys(questions).sort() : [];
   const totalCount = questionIds.length;
@@ -108,12 +114,9 @@ const Home = () => {
       const myQuestion = currentQuestionIndex;
       window.setTimeout(() => {
         // If we’re still on the same question and haven’t finished…
-        if (
-          currentQuestionIndex === myQuestion &&
-          myQuestion < totalCount
-        ) {
-          setCorrectCount(c => c - 1);
-          setMcqKey(k => k + 1);
+        if (currentQuestionIndex === myQuestion && myQuestion < totalCount) {
+          setCorrectCount((c) => c - 1);
+          setMcqKey((k) => k + 1);
         }
       }, 4000);
     }
@@ -133,21 +136,50 @@ const Home = () => {
         return;
       }
 
-      const { type, payload: inner } = msg.payload;
-      if (type === "completion") {
-        const { username, time } = inner as {
-          username: string;
-          time: number | "DNF";
-        };
+      const { type, payload } = msg.payload;
+      console.log("SDK received payload: " + JSON.stringify(payload));
 
-        setLeaderboard((prev) => {
-          if (prev.some((p) => p.username === username)) return prev;
-          return [...prev, { username, time }];
-        });
-      } else if (type === "gameStartedOnConnect") {
-        // if the engine signals “game already started” on connect
-        console.log("Joined late!");
-        setJoinedLate(true);
+      switch (type) {
+        case "completion":
+          const { username, time } = payload as {
+            username: string;
+            time: number | "DNF";
+          };
+          setLeaderboard((prev) => {
+            if (prev.some((p) => p.username === username)) return prev;
+            return [...prev, { username, time }];
+          });
+          break;
+
+        case "start":
+          // any previous joinedLate state needs to be overwritten because now we just received qData aka we're NOT late.
+          setIsLoading(false);
+          setJoinedLate(false);
+          break;
+
+        case "gameStartedOnConnect":
+          console.log("Joined late!");
+          setIsLoading(false);
+          setJoinedLate(true);
+          break;
+
+        case "countdownUpdate": {
+          console.log("SDK side countdownUpdate");
+          const { timeLeft, numLoaded, totalPlayers } = payload as {
+            timeLeft: number;
+            numLoaded: number;
+            totalPlayers: number;
+          };
+
+          setCountdownKey((k) => k + 1);
+          setTimeLeft(timeLeft);
+          console.log(timeLeft + "-> timeLEft");
+          setNumLoaded(numLoaded);
+          setTotalPlayers(totalPlayers);
+          setIsLoading(false);
+          console.log("is loading false");
+          break;
+        }
       }
     };
 
@@ -160,20 +192,21 @@ const Home = () => {
   useEffect(() => {
     if (hasInteractiveParams) {
       setIsLoading(true);
+      console.log("is loading true");
     }
   }, [hasInteractiveParams]);
 
-  useEffect(() => {
-    if (gameStarted && questions) {
-      setIsLoading(false);
-    }
-  }, [gameStarted, questions]);
+  // useEffect(() => {
+  //   if (gameStarted && questions) {
+  //     setIsLoading(false);
+  //   }
+  // }, [gameStarted, questions]);
 
   useEffect(() => {
-    if (!isLoading && startTime === null) {
+    if (gameStarted && startTime === null) {
       setStartTime(Date.now());
     }
-  }, [isLoading, startTime]);
+  }, [gameStarted, startTime]);
 
   useEffect(() => {
     if (!isLoading && currentQuestionIndex >= totalCount && startTime !== null && completionTime === null) {
@@ -182,7 +215,7 @@ const Home = () => {
   }, [isLoading, currentQuestionIndex, totalCount, startTime, completionTime]);
 
   // Temporary what we return on completion
-  if (!isLoading && currentQuestionIndex >= totalCount) {
+  if (!isLoading && gameStarted && currentQuestionIndex >= totalCount) {
     if (completionTime === null) return null;
     const seconds = Math.floor(completionTime / 1000);
     const accuracy = Math.max(0, Math.floor((correctCount / totalCount) * 100));
@@ -208,7 +241,7 @@ const Home = () => {
   }
 
   // Show a final screen if the game is over (received a DNF) but never if we've actually finished all questions.
-  if (!isLoading && currentQuestionIndex < totalCount && leaderboard.some((p) => p.time === "DNF")) {
+  if (!isLoading && gameStarted && currentQuestionIndex < totalCount && leaderboard.some((p) => p.time === "DNF")) {
     return (
       <PageContainer isLoading={false} headerText="Skill Sail Race">
         <div className="rtsdk p-6 text-center">
@@ -234,8 +267,14 @@ const Home = () => {
   }
 
   return (
-    <PageContainer isLoading={isLoading} headerText="Skill Sail Race">
-      {!isLoading && q && currentId && (
+    <PageContainer isLoading={isLoading && timeLeft === null} headerText="Skill Sail Race">
+      {/* show countdown once loading finishes but before the game starts*/}
+      {!isLoading && !gameStarted && timeLeft !== null && (
+        <Countdown key={countdownKey} timeLeft={timeLeft} numLoaded={numLoaded} totalPlayers={totalPlayers} />
+      )}
+
+      {/* once the game actually starts, render the questions */}
+      {!isLoading && gameStarted && q && currentId && (
         <MultipleChoiceQuestion
           key={`${currentId}-${mcqKey}`}
           questionId={currentId}

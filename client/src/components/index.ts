@@ -8,3 +8,4 @@ export * from "./PageFooter.js";
 export * from "./MultipleChoiceQuestion.js";
 export * from "./TypeExcerpt.js";
 export * from "./Leaderboard.js";
+export * from "./Countdown.js";

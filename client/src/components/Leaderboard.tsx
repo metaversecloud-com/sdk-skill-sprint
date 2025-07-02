@@ -39,12 +39,7 @@ export const Leaderboard = ({ players, maxPlayers = 8 }: LeaderboardProps) => {
         </thead>
         <tbody>
           {topPlayers.map((p, idx) => {
-            const timeDisplay =
-              p.time === "DNF" ? (
-                "DNF"
-              ) : (
-                formatTime(p.time as number)
-              );
+            const timeDisplay = p.time === "DNF" ? "DNF" : formatTime(p.time as number);
             return (
               <tr key={p.username} className="border-t">
                 <td className="p-2 p3">{idx + 1}</td>
