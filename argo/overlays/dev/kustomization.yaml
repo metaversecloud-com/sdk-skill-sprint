@@ -20,4 +20,4 @@ images:
   - name: ssprint0
     newName: 368076259134.dkr.ecr.us-east-1.amazonaws.com/sdk-example
     newTag: sdk-skill-sprint
-    digest: sha256:c126d7e85b1e24acafd17aeafb0f8bed17d0cc86d5add510c10ee1d29b8e9934
+    digest: sha256:30f088c330858d6735de2536623769cbb5d167add9a525c320e1d3836d22e755
