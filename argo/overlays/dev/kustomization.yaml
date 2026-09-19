@@ -5,7 +5,6 @@ resources:
   - ssprint0-config.yaml
   - ssprint0-sealedsecret.yaml
   - ssprint0-httpscaledobject.yaml
-  - ssprint0-interceptor-ingress.yaml
 patches:
   # Drop the direct ALB Ingress: dev is fronted through the KEDA interceptor.
   - target:
