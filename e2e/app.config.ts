@@ -64,16 +64,6 @@ export type RouteSpec = {
   knownBugs?: KnownBugs;
 };
 
-// getCredentials (protected file) returns { error } instead of throwing, so every route that
-// uses it has this bug until it's fixed there.
-const GET_CREDENTIALS_DOESNT_THROW = "EXP-428 #6: getCredentials doesn't throw";
-
-// server/index.ts registers the cleanReturnPayload scrubber after the API routes, so it never runs:
-// /api/game-state returns the raw DroppedAsset and /api/world/fire-toast the raw World, secret included. The
-// other routes return plain objects, and the iframe only calls /ice-servers and /signal, so they don't leak.
-const LEAKS = "EXP-429: cleanReturnPayload is registered after the routes (server/index.ts)";
-const UNNAMED = { unnamedCredentialError: GET_CREDENTIALS_DOESNT_THROW };
-
 /**
  * API routes that read the session credentials (getCredentials). Each one must reject missing or
  * foreign credentials and must never send the interactive secret to the browser. List them all.
@@ -83,17 +73,12 @@ const UNNAMED = { unnamedCredentialError: GET_CREDENTIALS_DOESNT_THROW };
  * tests/app instead (open it with page.request or fetch + AbortController and check the status).
  */
 export const CREDENTIALED_ROUTES: RouteSpec[] = [
-  { method: "get", path: "/game-state", knownBugs: { leaksSecret: LEAKS, ...UNNAMED } },
-  { method: "post", path: "/dropped-asset", knownBugs: UNNAMED },
-  { method: "post", path: "/remove-dropped-assets", knownBugs: UNNAMED },
-  {
-    method: "put",
-    path: "/world/fire-toast",
-    data: { title: "E2E toast", text: "hello" },
-    knownBugs: { leaksSecret: LEAKS, ...UNNAMED },
-  },
-  { method: "get", path: "/ice-servers", knownBugs: UNNAMED },
-  { method: "put", path: "/signal", data: { signal: { type: "offer", sdp: "v=0" } }, knownBugs: UNNAMED },
+  { method: "get", path: "/game-state" },
+  { method: "post", path: "/dropped-asset" },
+  { method: "post", path: "/remove-dropped-assets" },
+  { method: "put", path: "/world/fire-toast", data: { title: "E2E toast", text: "hello" } },
+  { method: "get", path: "/ice-servers" },
+  { method: "put", path: "/signal", data: { signal: { type: "offer", sdp: "v=0" } } },
 ];
 
 /**
@@ -150,10 +135,7 @@ export const HEALTH_KNOWN_BUGS: { incompleteContract?: string } = {};
  * registers its own logging handler. Fix: process.removeAllListeners("unhandledRejection") before
  * registering the app's handler.
  */
-export const PROCESS_KNOWN_BUGS: { exitsOnUnhandledRejection?: string } = {
-  exitsOnUnhandledRejection:
-    "EXP-472: @rtsdk/topia's unhandledRejection hook calls process.exit(1); server/index.ts's handler doesn't stop it",
-};
+export const PROCESS_KNOWN_BUGS: { exitsOnUnhandledRejection?: string } = {};
 
 /**
  * The request system.spec sends a malformed JSON body to. Default: the first POST/PUT route in
@@ -169,9 +151,7 @@ export const MALFORMED_JSON_REQUEST: { method: "post" | "put"; path: string } | 
  * middleware after express.json()). Fix: an error middleware that answers body-parser errors
  * (err.type === "entity.parse.failed") with res.status(400).json({ success: false, error: "Invalid JSON" }).
  */
-export const ERROR_KNOWN_BUGS: { malformedJson?: string } = {
-  malformedJson: "EXP-473: no error middleware: Express' default error page shows the stack trace (NODE_ENV isn't production)",
-};
+export const ERROR_KNOWN_BUGS: { malformedJson?: string } = {};
 
 /**
  * true starts mock-redis/server.mjs (an in-memory Redis) next to mock-topia and points REDIS_URL at it
